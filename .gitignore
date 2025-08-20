@@ -1,2 +1,11 @@
 *.zip
 *.rar
+*.png
+
+*.html
+*.css
+*.min.css
+*.min.js.download
+*.js.download
+
+*/css
