@@ -1,4 +1,4 @@
-# Week 6 - Neural Networks Module
+# Neural Networks Module
 ## Project 6: 
 - Categorize recognition of Traffic lights with a supervised trained Convolutional Neutal Network
 
