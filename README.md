@@ -23,6 +23,7 @@ The course is structured into **7 lectures**, each with an associated **quiz** a
 
 > Project:
 - [X] Tic-Tac-Toe AI  
+- [ ] Degrees 
 
 ### Module 1 - Knowledge
 
