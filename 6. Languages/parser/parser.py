@@ -1,5 +1,10 @@
 import nltk
-# nltk.download('punkt_tab') # First-time execution only, to download the punkt tokenizer
+try:
+    nltk.data.find("tokenizers/punkt_tab/english/")
+except LookupError:
+    print("punkt_tab is now being downloaded... ✅")
+    nltk.download("punkt_tab")
+    print("Download completed! 👍")
 
 import sys
 
@@ -17,7 +22,16 @@ V -> "smiled" | "tell" | "were"
 """
 
 NONTERMINALS = """
-S -> N V
+S -> NP VP | S Conj S
+
+NP -> Det N | Det AdjG N | N | NP Conj NP | NP PP
+
+AdjG -> Adj | Adj AdjG
+
+VP -> V | VP NP | VP PP | VP Conj VP | Adv VP 
+
+PP -> P NP
+
 """
 
 grammar = nltk.CFG.fromstring(NONTERMINALS + TERMINALS)
@@ -27,7 +41,7 @@ parser = nltk.ChartParser(grammar)
 def main():
 
     # If filename specified, read sentence from file
-    if len(sys.argv) == 2:
+    if len(sys.argv) > 1:
         with open(sys.argv[1]) as f:
             s = f.read()
 
@@ -50,22 +64,19 @@ def main():
 
     # Print each tree with noun phrase chunks
     for tree in trees:
-        tree.pretty_print()
+        tree.pretty_print(unicodelines=True, nodedist=4)
 
         print("Noun Phrase Chunks")
         for np in np_chunk(tree):
             print(" ".join(np.flatten()))
+            for n in np:
+                print("Label= {} Height= {}".format(n.label(), n.height()), end="\n\n")
+
+    print("🔍 Trees found: {}".format(len(trees)))
+                    
 
 
-def preprocess(sentence):
-    """
-    Convert `sentence` to a list of its words.
-    Pre-process sentence by converting all characters to lowercase
-    and removing any word that does not contain at least one alphabetic
-    character.
-    """
-
-    def rm_no_alphanumeric(str):
+def _rm_no_alphanumeric(str):
         if str.isalpha():
             return True
         elif len(str) == 1:
@@ -75,8 +86,25 @@ def preprocess(sentence):
                 if c.isalpha:
                     return True
         return False
-    
-    return list(filter(rm_no_alphanumeric, nltk.tokenize.word_tokenize(sentence.lower()))
+
+def preprocess(sentence):
+    """
+    Convert `sentence` to a list of its words.
+    Pre-process sentence by converting all characters to lowercase
+    and removing any word that does not contain at least one alphabetic
+    character.
+    """
+    def _rm_no_alphanumeric(str):
+        if str.isalpha():
+            return True
+        elif len(str) == 1:
+            return str.isalpha()
+        else:
+            for c in str:
+                if c.isalpha:
+                    return True
+        return False
+    return list(filter(_rm_no_alphanumeric, nltk.tokenize.word_tokenize(sentence.lower())))
 
 
 def np_chunk(tree):
@@ -86,7 +114,11 @@ def np_chunk(tree):
     whose label is "NP" that does not itself contain any other
     noun phrases as subtrees.
     """
-    raise NotImplementedError
+    chunks = []
+    for np_tree in tree.subtrees(lambda n: n.label() == "NP"):
+        if not any(child.label() == "NP" for child in np_tree.subtrees(lambda t: t != np_tree)):
+            chunks.append(np_tree)
+    return chunks
 
 
 if __name__ == "__main__":
